@@ -1,23 +1,23 @@
-const scatterWidth = 960;
-const scatterHeight = 500;
+const svgWidth = 960;
+const svgHeight = 500;
 
 const margin = {
     top: 20,
     right: 40,
     bottom: 80,
-    left: 100,
+    left: 100
 };
 
 
-const width = scatterWidth - margin.left - margin.right;
-const height = scatterHeight - margin.top - margin.bottom;
+const width = svgWidth - margin.left - margin.right;
+const height = svgHeight - margin.top - margin.bottom;
 
 
 const svg = d3
     .select("#scatter")
     .append("svg")
-    .attr("width", scatterWidth)
-    .attr("height", scatterHeight + 40);
+    .attr("width", svgWidth)
+    .attr("height", svgHeight + 40);
 
 const scatterGroup = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -26,7 +26,7 @@ let selectXAxis = 'poverty'
 let selectYAxis = 'healthcare';
 
 (async function(){
-    const data = await d3.csv("../assets/data/data.csv");
+    const data = await d3.csv("assets/data/data.csv");
 
     data.forEach(function(point){
         point.poverty = +point.poverty;
@@ -37,8 +37,8 @@ let selectYAxis = 'healthcare';
         point.income = +point.income;
     });
 
-    let xLinear = xScale(data, selectXAxis);
-    let yLinear = yScale(data, selectYAxis);
+    let xLinear = xScaler(data, selectXAxis);
+    let yLinear = yScaler(data, selectYAxis);
 
     let lowerAxis = d3.axisBottom(xLinear);
     let leftSide = d3.axisLeft(yLinear);
@@ -61,20 +61,20 @@ let selectYAxis = 'healthcare';
     .attr('r', 15)
     .classed('stateCircle', true);
 
-    let pointText = pointsGroup.append("text")
+    let pointsText = pointsGroup.append("text")
         .text(d => d.abbr)
         .attr("dx", d => xLinear(d[selectXAxis]))
-        .attr("dy", d => xLinear(d[selectYAxis]) + 5)
+        .attr("dy", d => yLinear(d[selectYAxis]) + 5)
         .classed("stateText", true);
 
-const xLabels = chartGroup.append("g")
-        .attr("transform", `translate(${width/2}, ${height})`);
+const xLabels = scatterGroup.append("g")
+        .attr("transform", `translate(${width / 2}, ${height})`);
     
     const lowerIncomeLabel = xLabels.append('text')
         .attr("x", 0)
         .attr("y", 40)
         .attr("value", "poverty")
-        .text("% Poverty")
+        .text("Lower Income (%)")
         .classed('active', true);
         
     const ageLabel = xLabels.append('text')
@@ -95,17 +95,17 @@ const yLabels = scatterGroup.append('g');
 
     const healthLabel = yLabels.append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('x', -(height/2))
-        .attr('y', -60)
+        .attr('x', -(height / 2))
+        .attr('y', -40)
         .attr('value', 'healthcare')
         .text('No Healthcare (%)')
         .classed('active', true);
 
     const smokerLabel = yLabels.append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('x', -(height/2))
+        .attr('x', -(height / 2))
         .attr('y', -60)
-        .attr('value', 'smokers')
+        .attr('value', 'smokes')
         .text('Smokers (%)')
         .classed('inactive', true);
 
@@ -114,7 +114,7 @@ const yLabels = scatterGroup.append('g');
         .attr('x', -(height / 2))
         .attr ('y', -80)
         .attr('value', 'obesity')
-        .text("Overweight %")
+        .text("Overweight (%)")
         .classed('inactive', true)
 
 pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
@@ -124,11 +124,11 @@ pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
             const value = d3.select(this).attr('value');
             if (value !== selectXAxis){
                 selectXAxis = value;
-                xLinear = xScale(data, selectXAxis);
-                xAxis = renderXAxes(xLinear, xAxis);
-                pointXY = renderXCircles(pointXY, xLinear, selectXAxis);
-                pointsText = renderXText(pointsText, XLinear, selectXAxis);
-                pointsGroup = updateToolTop(pointsGroup, selectXAxis, selectYAxis);
+                xLinear = xScaler(data, selectXAxis);
+                xAxis = renderX(xLinear, xAxis);
+                pointsXY = renderXPoints(pointsXY, xLinear, selectXAxis);
+                pointsText = xText(pointsText, xLinear, selectXAxis);
+                pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
 
                 if (selectXAxis == 'age'){
                     lowerIncomeLabel
@@ -138,8 +138,8 @@ pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
                         .classed('active', true)
                         .classed('inactive', false);
                     incomeLabel
-                        .classed('active', true)
-                        .classed('inactive', false);
+                        .classed('active', false)
+                        .classed('inactive', true);
                 } else if (selectXAxis == 'income') {
                     lowerIncomeLabel
                         .classed('active', false)
@@ -148,12 +148,12 @@ pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
                         .classed('active', false)
                         .classed('inactive', true);
                     incomeLabel
-                        .classed('active', false)
-                        .classed('inactive', true);
+                        .classed('active', true)
+                        .classed('inactive', false);
                 } else {
                     lowerIncomeLabel
-                        .classed('active', false)
-                        .classed('inactive', true);
+                        .classed('active', true)
+                        .classed('inactive', false);
                     ageLabel
                         .classed('active', false)
                         .classed('inactive', true);
@@ -161,7 +161,7 @@ pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
                         .classed('active', false)
                         .classed('inactive', true);
                 }
-                }
+            }
         });
 
         yLabels.selectAll('text')
@@ -169,13 +169,13 @@ pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
             const value = d3.select(this).attr('value');
             if (value !== selectYAxis){
                 selectYAxis = value;
-                yLinear = xScale(data, selectYAxis);
-                yAxis = renderXAxes(yLinear, yAxis);
-                pointXY = renderXCircles(pointXY, yLinear, selectYAxis);
-                pointsText = renderXText(pointsText, yLinear, selectYAxis);
-                pointsGroup = updateToolTop(pointsGroup, selectXAxis, selectYAxis);
+                yLinear = yScaler(data, selectYAxis);
+                yAxis = renderY(yLinear, yAxis);
+                pointsXY = renderYPoints(pointsXY, yLinear, selectYAxis);
+                pointsText = yText(pointsText, yLinear, selectYAxis);
+                pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
 
-                if (selectXAxis == 'smokes'){
+                if (selectYAxis == 'smokes'){
                     healthLabel
                         .classed('active', false)
                         .classed('inactive', true);
@@ -185,7 +185,7 @@ pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
                     overweightLabel
                         .classed('active', false)
                         .classed('inactive', true);
-                } else if (selectXAxis == 'income') {
+                } else if (selectYAxis == 'obesity') {
                     healthLabel
                         .classed('active', false)
                         .classed('inactive', true);
@@ -209,4 +209,4 @@ pointsGroup = updateToolTip(pointsGroup, selectXAxis, selectYAxis);
                 }
         });
 
-})
+})()

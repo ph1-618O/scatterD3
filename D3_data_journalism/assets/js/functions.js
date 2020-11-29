@@ -19,58 +19,50 @@ function yScaler(data, selectYAxis){
 
 //Update Axes on click
 function renderX(nextXScale, xAxis){
-    let lowerAxis = 
-                    d3.axisBottom(nextXScale);
-    xAxis
-            .transition()
+    let lowerAxis = d3.axisBottom(nextXScale);
+    xAxis.transition()
             .duration(1000)
             .call(lowerAxis);
     return xAxis;
 }
 
 function renderY(nextYScale, yAxis){
-    let upperAxis = 
-                    d3.axisLeft(nextYScale);
-    yAxis
-            .transition()
+    let upperAxis = d3.axisLeft(nextYScale);
+    yAxis.transition()
             .duration(1000)
             .call(upperAxis);
     return yAxis;
 }
 //Update Points
-function renderXPoints(pointsGroup, nextYScale, selectXAxis){
-    scatterGroup
-                .transition()
-                .duration()
-                .attr('cx', d => nextYScale(d[selectXAxis]));
-    return scatterGroup
+function renderXPoints(pointsGroup, nextXScale, selectXAxis){
+    pointsGroup.transition()
+                .duration(1000)
+                .attr('cx', d => nextXScale(d[selectXAxis]));
+    return pointsGroup
 }
 
 function renderYPoints(pointsGroup, nextYScale, selectYAxis){
-    scatterGroup
-                .transition()
-                .duration()
-                .attr('cy', d => nextXScale(d[selectYAxis]));
-    return scatterGroup
+    pointsGroup.transition()
+                .duration(1000)
+                .attr('cy', d => nextYScale(d[selectYAxis]));
+    return pointsGroup
 }
 
 
 //Render Text
 
-function xText(scatterGroup, nextXScale, selectXAxis){
-    scatterGroup
-                .transition()
+function xText(pointsGroup, nextXScale, selectXAxis){
+    pointsGroup.transition()
                 .duration(1000)
                 .attr('dx', d => nextXScale(d[selectXAxis]));
-    return scatterGroup
+    return pointsGroup;
 }
 
-function yText(scatterGroup, nextYScale, selectYAxis){
-    scatterGroup
-                .transition()
+function yText(pointsGroup, nextYScale, selectYAxis){
+    pointsGroup.transition()
                 .duration(1000)
-                .attr('dx', d => nextYScale(d[selectYAxis]));
-    return scatterGroup
+                .attr('dy', d => nextYScale(d[selectYAxis])+5);
+    return pointsGroup;
 }
 
 //changing int to dollar format
@@ -79,7 +71,7 @@ let usCurrency = new Intl.NumberFormat('en-US', {
     currency: 'USD'
 })
 
-function updateToolTip(scatterGroup, selectXAxis, selectYAxis) {
+function updateToolTip(pointsGroup, selectXAxis, selectYAxis) {
 
     let xPercent = "";
     let xLabel = "";
@@ -97,11 +89,11 @@ function updateToolTip(scatterGroup, selectXAxis, selectYAxis) {
     if (selectYAxis === 'healthcare'){
         yLabel = 'Health care';
         yPercent = '%';
-    } else if (selectYAxis === 'smoker'){
+    } else if (selectYAxis === 'smokers'){ 
         yLabel = 'Smoker';
         yPercent = '%';
     } else {
-        yLabel = 'Over Weight';
+        yLabel = 'overWeight';
         yPercent = '%';
     }
     const toolTip = d3.tip()
@@ -109,21 +101,21 @@ function updateToolTip(scatterGroup, selectXAxis, selectYAxis) {
         .offset([50, -75])
         .html(function (d){
             if (selectXAxis === 'income'){
-                let incomeLevel = formatter.format(d[selectXAxis]);
+                let incomeLevel = usCurrency.format(d[selectXAxis]);
                 return (`${d.state}<br>${xLabel}: ${incomeLevel.substring(0, incomeLevel.length-3)}${xPercent}<br>${yLabel}: ${d[selectXAxis]}${yPercent}`)
             }  else {
                 return(`${d.state}<br>${xLabel}: ${d[selectYAxis]}${xPercent}<br>${yLabel}: ${d[selectYAxis]}${yPercent}`)
             };
 
         });
-    scatterGroup.call(toolTip);
+    pointsGroup.call(toolTip);
 
-    scatterGroup.on('mouseover', function (thisData){
+    pointsGroup.on('mouseover', function (thisData){
         toolTip.show(thisData, this);
     })
     .on('mouseout', function (thisData){
         toolTip.hide(thisData, this);
     });
 
-    return scatterGroup;
+    return pointsGroup;
 }
